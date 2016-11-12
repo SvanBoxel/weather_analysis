@@ -21,7 +21,7 @@ def get_weather(latitude, longitude, date, units='auto'):
         :type date: datetime.date
         :param units: Observation units. Default auto.
                       Possible values: auto, ca, uk2, us, si
-        :returns: JSON object with the daily weather conditions
+        :returns: JSON object with the daily weather conditions or False
     """
     api_forecast_io = 'https://api.darksky.net/forecast/{}/{},{},{}?units={}'
     date = '{}T00:00:00'.format(date)
@@ -30,8 +30,12 @@ def get_weather(latitude, longitude, date, units='auto'):
                                         longitude,
                                         date,
                                         units)
+    response = requests.get(lookup_url)
 
-    return(requests.get(lookup_url).json())
+    if response:
+        return(response.json())
+    else:
+        return(False)
 
 
 @click.command()
@@ -64,6 +68,7 @@ def main(location, year):
     obs_dates = [d.date() for d in pd.date_range(start=year_start,
                                                  end=year_end,
                                                  normalize=True)]
+    click.echo("Fetching the data from Dark Sky API:")
     with tqdm(total=len(obs_dates)) as pbar:
         for obs_date in obs_dates:
             doy = obs_date.timetuple().tm_yday
@@ -73,17 +78,22 @@ def main(location, year):
                 # get the json request for the weather observations for the day
                 response = get_weather(latitude, longitude, obs_date)
 
-                # get the day of year in the response and assert it corresponds
-                # to the request day of year
-                obs_time = response['daily']['data'][0]['time']
-                response_doy = date.fromtimestamp(obs_time).timetuple().tm_yday
-                assert response_doy == doy
+                if response:
+                    # get the day of year in the response and assert it
+                    # corresponds to the request day of year
+                    resp_ts = response['daily']['data'][0]['time']
+                    resp_date = date.fromtimestamp(resp_ts)
+                    resp_doy = resp_date.timetuple().tm_yday
+                    assert resp_doy == doy
 
-                # write json file
-                with open(obs_fn, 'w') as fp:
-                    json.dump(response, fp)
+                    # write json file
+                    with open(obs_fn, 'w') as fp:
+                        json.dump(response, fp)
+                else:
+                    logger.warning("doy:%s can't fetch data from API" % (doy))
+                    return
             else:
-                logger.info('file ' + obs_fn + ' already exists, skipping request')
+                logger.info('file ' + obs_fn + ' already exists, skipping')
             pbar.update(1)
 
 
