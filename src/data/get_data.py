@@ -12,30 +12,30 @@ from datetime import date
 from geopy.geocoders import GoogleV3
 
 
-def get_weather(latitude, longitude, date, units='auto'):
+def get_weather(latitude, longitude, obs_date, units='auto'):
     """ Takes a location coordinates and a date and returns the weather conditions.
 
         :param float latitude: Latitude
         :param float longitude: Longitude
-        :param date: Date for the observation as a datetime.date
-        :type date: datetime.date
+        :param obs_date: Date for the observation
+        :type obs_date: datetime.date
         :param units: Observation units. Default auto.
                       Possible values: auto, ca, uk2, us, si
         :returns: JSON object with the daily weather conditions or False
     """
     api_forecast_io = 'https://api.darksky.net/forecast/{}/{},{},{}?units={}'
-    date = '{}T00:00:00'.format(date)
+    obs_date = '{}T00:00:00'.format(obs_date)
     lookup_url = api_forecast_io.format(os.environ.get('DARKSKY_KEY'),
                                         latitude,
                                         longitude,
-                                        date,
+                                        obs_date,
                                         units)
     response = requests.get(lookup_url)
 
     if response:
-        return(response.json())
+        return response.json()
     else:
-        return(False)
+        return False
 
 
 @click.command()
@@ -51,7 +51,6 @@ def main(location, year):
     logger.info('getting json data for every day of the year')
 
     # create folder path for saving the JSON data
-    project_dir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
     raw_data_folder = os.path.join(project_dir, 'data', 'raw')
     output_folder = os.path.join(raw_data_folder, location)
     if not os.path.exists(output_folder):
@@ -90,7 +89,7 @@ def main(location, year):
                     with open(obs_fn, 'w') as fp:
                         json.dump(response, fp)
                 else:
-                    logger.warning("doy:%s can't fetch data from API" % (doy))
+                    logger.warning("doy:%s can't fetch data from API" % doy)
                     return
             else:
                 logger.info('file ' + obs_fn + ' already exists, skipping')
