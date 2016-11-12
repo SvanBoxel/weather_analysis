@@ -8,3 +8,5 @@ pandas
 geopy
 matplotlib
 watermark
+q
+tqdm
