@@ -35,7 +35,7 @@ def get_weather(latitude, longitude, obs_date, units='auto'):
     if response:
         return response.json()
     else:
-        return False
+        return
 
 
 @click.command()
