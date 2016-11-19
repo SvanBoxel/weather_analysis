@@ -83,7 +83,13 @@ def main(location, year):
                     resp_ts = response['daily']['data'][0]['time']
                     resp_date = date.fromtimestamp(resp_ts)
                     resp_doy = resp_date.timetuple().tm_yday
-                    assert resp_doy == doy
+                    try:
+                        assert resp_doy == doy, "Day of year must be equal in request and response."
+                    except AssertionError:
+                        logger.error("Day of year in request (%i) is diferent from response (%i)."
+                                     % (doy, resp_doy))
+                    else:
+                        logger.info("Day of year in request and response are the same.")
 
                     # write json file
                     with open(obs_fn, 'w') as fp:
