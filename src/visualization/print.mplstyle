@@ -1,0 +1,21 @@
+# font
+font.size: 11.0
+
+# text
+text.color: 515454
+
+# axes
+axes.edgecolor: DEE5E7
+axes.linewidth: 1
+axes.axisbelow: True
+
+# ticks
+xtick.color: 515454
+ytick.color: 515454
+xtick.labelsize: 9.0
+ytick.labelsize: 8.0
+
+# grid
+grid.color: DEE5E7
+grid.linewidth: 0.5
+# grid.alpha: 0.5

@@ -11,3 +11,4 @@ watermark
 q
 tqdm
 requests
+seaborn
