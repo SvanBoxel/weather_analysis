@@ -44,52 +44,49 @@ def get_weather(latitude, longitude, obs_date, units='auto'):
 def main(location, year):
     """ Run data gathering scripts to fetch weather observation data from
         Dark Sky API for given year and location and save it as JSON at
-        ../../data/raw/{location} in files {year}_doy.json, where doy is the
+        ../../data/raw/{location}/{year} in files doy.json, where doy is the
         day of the year.
+
+        :param str location: Name of the location
+        :param int year: Observations year to download
     """
     logger = logging.getLogger(__name__)
     logger.info('getting json data for every day of the year')
 
     # create folder path for saving the JSON data
-    raw_data_folder = os.path.join(project_dir, 'data', 'raw')
-    output_folder = os.path.join(raw_data_folder, location)
+    output_folder = os.path.join(project_dir, 'data', 'raw', location, str(year))
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    # Use `geopy` to get the coordinates of the location.
-    geolocator = GoogleV3()
-    geocode = geolocator.geocode(location)
+    # use `geopy` to get the coordinates of the location.
+    geocode = GoogleV3().geocode(location)
     latitude = geocode.latitude
     longitude = geocode.longitude
 
-    year_start = date(year, 1, 1)
-    year_end = date(year, 12, 31)
-    obs_dates = [d.date() for d in pd.date_range(start=year_start,
-                                                 end=year_end,
+    obs_dates = [d.date() for d in pd.date_range(start=date(year, 1, 1),
+                                                 end=date(year, 12, 31),
                                                  normalize=True)]
     click.echo("Fetching the data from Dark Sky API:")
     with tqdm(total=len(obs_dates)) as pbar:
         for obs_date in obs_dates:
             doy = obs_date.timetuple().tm_yday
-            obs_fn = str(year) + '_' + str(doy) + '.json'
-            obs_fn = os.path.normpath(os.path.join(output_folder, obs_fn))
+            obs_fn = os.path.normpath(os.path.join(output_folder, str(doy) + '.json'))
+
+            # TODO: Error checking. Assumes that if file exists then it's correct
             if not os.path.exists(obs_fn):
                 # get the json request for the weather observations for the day
                 response = get_weather(latitude, longitude, obs_date)
-
                 if response:
-                    # get the day of year in the response and assert it
-                    # corresponds to the request day of year
-                    resp_ts = response['daily']['data'][0]['time']
-                    resp_date = date.fromtimestamp(resp_ts)
+                    # check day of year in the response and assert is same in request
+                    resp_date = date.fromtimestamp(response['daily']['data'][0]['time'])
                     resp_doy = resp_date.timetuple().tm_yday
                     try:
-                        assert resp_doy == doy, "Day of year must be equal in request and response."
+                        assert resp_doy == doy, "Day of year should be equal in request and response."
                     except AssertionError:
-                        logger.error("Day of year in request (%i) is diferent from response (%i)."
+                        logger.error("Request day of year (%i) diferent from in response (%i)."
                                      % (doy, resp_doy))
                     else:
-                        logger.info("Day of year in request and response are the same.")
+                        logger.info("Request day of year same as in response.")
 
                     # write json file
                     with open(obs_fn, 'w') as fp:
