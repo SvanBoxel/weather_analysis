@@ -91,7 +91,7 @@ def main(location, year):
                     with open(obs_fn, 'w') as fp:
                         json.dump(response, fp)
                 else:
-                    logger.warning(u'doy:{0:s} can\'t fetch data from API'.format(doy))
+                    logger.warning(u'doy:{0:d} can\'t fetch data from API'.format(doy))
                     return
             else:
                 logger.info('file {0} already exists, skipping'.format(obs_fn))
