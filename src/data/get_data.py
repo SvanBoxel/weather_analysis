@@ -66,13 +66,12 @@ def main(location, year):
     obs_dates = [d.date() for d in pd.date_range(start=date(year, 1, 1),
                                                  end=date(year, 12, 31),
                                                  normalize=True)]
-    click.echo("Fetching the data from Dark Sky API:")
+    click.echo('Fetching the data from Dark Sky API:')
     with tqdm(total=len(obs_dates)) as pbar:
         for obs_date in obs_dates:
             doy = obs_date.timetuple().tm_yday
             obs_fn = os.path.normpath(os.path.join(output_folder, str(doy) + '.json'))
 
-            # TODO: Error checking. Assumes that if file exists then it's correct
             if not os.path.exists(obs_fn):
                 # get the json request for the weather observations for the day
                 response = get_weather(latitude, longitude, obs_date)
@@ -81,21 +80,21 @@ def main(location, year):
                     resp_date = date.fromtimestamp(response['daily']['data'][0]['time'])
                     resp_doy = resp_date.timetuple().tm_yday
                     try:
-                        assert resp_doy == doy, "Day of year should be equal in request and response."
+                        assert resp_doy == doy, 'Day of year should be equal in request and response.'
                     except AssertionError:
-                        logger.error("Request day of year (%i) diferent from in response (%i)."
-                                     % (doy, resp_doy))
+                        logger.error(u'Request day of year ({0:d}) diferent from in response ({1:d}).'
+                                     .format(doy, resp_doy))
                     else:
-                        logger.info("Request day of year same as in response.")
+                        logger.info('Request day of year same as in response.')
 
                     # write json file
                     with open(obs_fn, 'w') as fp:
                         json.dump(response, fp)
                 else:
-                    logger.warning("doy:%s can't fetch data from API" % doy)
+                    logger.warning(u'doy:{0:s} can\'t fetch data from API'.format(doy))
                     return
             else:
-                logger.info('file ' + obs_fn + ' already exists, skipping')
+                logger.info('file {0} already exists, skipping'.format(obs_fn))
             pbar.update(1)
 
 
@@ -109,6 +108,6 @@ if __name__ == '__main__':
     # find .env automagically by walking up directories until it's found, then
     # load up the .env entries as environment variables
     load_dotenv(find_dotenv())
-    load_dotenv(os.path.join(os.path.expanduser('~'), ".env"))
+    load_dotenv(os.path.join(os.path.expanduser('~'), '.env'))
 
     main()
