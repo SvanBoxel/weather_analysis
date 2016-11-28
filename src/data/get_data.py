@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-import os
-import click
-import logging
-from tqdm import tqdm
-from dotenv import find_dotenv, load_dotenv
-
-import requests
 import json
-import pandas as pd
+import logging
+import os
 from datetime import date
+
+import click
+import pandas as pd
+import requests
+from dotenv import find_dotenv, load_dotenv
 from geopy.geocoders import GoogleV3
+from tqdm import tqdm
 
 
 def get_weather(latitude, longitude, obs_date, units='auto'):
