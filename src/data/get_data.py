@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import sys
 from datetime import date
 
 import click
@@ -51,7 +52,7 @@ def main(location, year):
         :param int year: Observations year to download
     """
     logger = logging.getLogger(__name__)
-    logger.info('getting json data for every day of the year')
+    logger.info("getting json data for every day of the year")
 
     # create folder path for saving the JSON data
     output_folder = os.path.join(project_dir, 'data', 'raw', location, str(year))
@@ -66,7 +67,7 @@ def main(location, year):
     obs_dates = [d.date() for d in pd.date_range(start=date(year, 1, 1),
                                                  end=date(year, 12, 31),
                                                  normalize=True)]
-    click.echo('Fetching the data from Dark Sky API:')
+    click.echo("Fetching the data from Dark Sky API:")
     with tqdm(total=len(obs_dates)) as pbar:
         for obs_date in obs_dates:
             doy = obs_date.timetuple().tm_yday
@@ -76,31 +77,37 @@ def main(location, year):
                 # get the json request for the weather observations for the day
                 response = get_weather(latitude, longitude, obs_date)
                 if response:
-                    # check day of year in the response and assert is same in request
-                    resp_date = date.fromtimestamp(response['daily']['data'][0]['time'])
-                    resp_doy = resp_date.timetuple().tm_yday
+                    # check that response json had the `daily` key
                     try:
-                        assert resp_doy == doy, 'Day of year should be equal in request and response.'
+                        resp_date = date.fromtimestamp(response['daily']['data'][0]['time'])
+                        resp_doy = resp_date.timetuple().tm_yday
+                    except KeyError:
+                        logger.error("response JSON doesn't have `daily` key")
+                        click.echo(response)
+                        sys.exit(0)
+                    # check day of year in the response and assert is same in request
+                    try:
+                        assert resp_doy == doy, "Day of year should be equal in request and response."
                     except AssertionError:
-                        logger.error(u'Request day of year ({0:d}) diferent from in response ({1:d}).'
-                                     .format(doy, resp_doy))
+                        logger.warning("request day of year ({0:d}) diferent from in response ({1:d})"
+                                       .format(doy, resp_doy))
                     else:
-                        logger.info('Request day of year same as in response.')
+                        logger.info("request day of year same as in response")
 
                     # write json file
                     with open(obs_fn, 'w') as fp:
                         json.dump(response, fp)
                 else:
-                    logger.warning(u'doy:{0:d} can\'t fetch data from API'.format(doy))
+                    logger.error("doy:{0:d} can\'t fetch data from API".format(doy))
                     return
             else:
-                logger.info('file {0} already exists, skipping'.format(obs_fn))
+                logger.info("file {0} already exists, skipping".format(obs_fn))
             pbar.update(1)
 
 
 if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.WARNING, format=log_fmt)
+    log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    logging.basicConfig(level=logging.ERROR, format=log_fmt)
 
     # not used in this stub but often useful for finding various files
     project_dir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
