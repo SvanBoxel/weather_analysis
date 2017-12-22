@@ -12,3 +12,4 @@ q
 tqdm
 requests
 seaborn
+jupyter
