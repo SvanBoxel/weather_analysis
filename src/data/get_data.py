@@ -60,7 +60,7 @@ def main(location, year):
         os.makedirs(output_folder)
 
     # use `geopy` to get the coordinates of the location.
-    geocode = GoogleV3().geocode(location)
+    geocode = GoogleV3(api_key=os.environ.get('WTD_MAPS_KEY')).geocode(location)
     latitude = geocode.latitude
     longitude = geocode.longitude
 
