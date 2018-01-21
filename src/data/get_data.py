@@ -67,7 +67,7 @@ def main(location, year):
     obs_dates = [d.date() for d in pd.date_range(start=date(year, 1, 1),
                                                  end=date(year, 12, 31),
                                                  normalize=True)]
-    click.echo("Fetching the data from Dark Sky API:")
+    click.echo("\nFetching the data from Dark Sky API:")
     with tqdm(total=len(obs_dates)) as pbar:
         for obs_date in obs_dates:
             doy = obs_date.timetuple().tm_yday
